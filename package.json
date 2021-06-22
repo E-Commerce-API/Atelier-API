@@ -1,0 +1,24 @@
+{
+  "name": "questions_answers_api",
+  "version": "1.0.0",
+  "description": "Questions and Answers API",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \\\"Error: no test specified\\\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SDC-Jupiter/Questions_Answers_API.git"
+  },
+  "author": "sunkim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SDC-Jupiter/Questions_Answers_API/issues"
+  },
+  "homepage": "https://github.com/SDC-Jupiter/Questions_Answers_API#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongoose": "^5.12.14"
+  }
+}
