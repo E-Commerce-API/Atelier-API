@@ -1,10 +1,30 @@
 const fs = require('fs');
 const path = require('path');
-const { Answer } = reuqire('./models.js')
-const filePath = path.join(__dirname, '../data/answers.csv')
+const csv = require('fast-csv')
+const { Questions } = reuqire('./Questions.js')
+const filePath = path.join(__dirname, '../data/questions.csv')
 
-const readStream = fs.createReadStream(filePath, {encoding: 'utf8'});
+// const readStream = fs.createReadStream(filePath, {encoding: 'utf8'});
 
+// var chunkArray = [];
+
+// readStream.on('data', (chunk) => {
+//   chunkArray.push(chunk);
+//   if (chunkArray.length > 100000) {
+//     Questions.collection.insertMany(chunkArray, { ordered: false})
+//     chunkArray = []
+//   }
+// });
+
+// readStream.on('end', () => {
+//   Questions.collection.insertMany(chunkArray, { ordered: false})
+//     .then(() => {
+//       console.log('done');
+//     })
+// })
+
+
+/*
 var bulk = Answer.collection.initializeOrderedBulkOp();
 var lineRemainder = '';
 var count = 0;
@@ -35,3 +55,4 @@ readStream.on('data', (chunk) => {
 readStream.on('end', () => {
   console.log(count);
 })
+*/

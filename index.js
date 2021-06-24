@@ -49,14 +49,6 @@ app.put('/qa/answers/:answer_id/report', (req, res) => {
 });
 
 
-
-/*
-mongoimport --db sdcproducts --collection Styles --type csv --headerline --ignoreBlanks --file /home/scottprovence/rfe3/SDC/ProductsAPI/raw_data/styles.csv
-*/
-
-
-
-
 let port = process.env.PORT || 3030;
 
 app.listen(port, function() {

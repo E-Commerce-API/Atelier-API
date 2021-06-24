@@ -1,21 +1,73 @@
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/SDC', {useNewUrlParser: true, useUnifiedTopology: true });
-var model = require('./models.js')
+let Questions = require('./Questions.js');
+let Answers = require('./Answers.js');
+let Photos = require('./Photos.js');
 
+db.Questions.aggregate([{
+  $lookup: {
+    from: 'Answers',
+    localField: 'id',
+    foreignField: 'question_id',
+    as: 'answers'
+  }
+},{
+  $unwind: {
+    path: '$answers',
+    preserveNullAndEmptyArrays: true
+  }
+}, {
+  $lookup: {
+    from: 'Photos',
+    localField: 'id',
+    foreignField: 'answer_id',
+    as: 'answers.photos'
+  }
+}, {$out: "output"}
+])
 
 let getQuestions = (req, res) => {
-  console.log('what is req?', req)
-  return model.Question.find({ product_id: req.params.product_id});
+  Questions.aggregate([{
+    $lookup: {
+      from: 'Answers',
+      let: { 'question_id': 'id' },
+      pipeline: [
+        {$match: { $expr: {$eq: ['$question_id', '$$question_id']}}},
+        {$lookup: {
+          from: 'Photos',
+          let: { 'answer_id' : 'id'},
+          pipeline: [
+            {$match: { $expr: { $eq: ['$answer_id', '$$answer_id']}}}
+          ],
+          as: 'answers'
+        }}
+      ],
+      as: 'answers'
+    }},
+    {$unwind: 'answers'}
+])
 }
 
-let getAnswers = (req, res) => {
-  return model.Answer.find({question_id: req.params.question_id});
+let getAnswers = async (req, res) => {
+ let answers = await Answers.aggregate([{
+   $lookup: {
+     from: "Photos",
+     localField: "id",
+     foreignField: "answer_id",
+     as: "photos"
+   }
+ }], (err, response) => {
+   if (err) {
+     res.send(err);
+   } else {
+    res.send(response);
+   }
+ })
 }
-
 
 
 let addQuestion = () => {
-  var newQuestion = new model.Question({
+  var newQuestion = new Questions({
     product_id: req.body.product_id,
     question_id: req.body.question_id,
     question_body: req.body.question_body,
@@ -33,7 +85,7 @@ let addQuestion = () => {
 }
 
 let addAnswer = () => {
-  var newAnswer = new model.Answer({
+  var newAnswer = new Answers({
     question_id: req.body.question_id,
     body: req.body.body,
     date_written: req.body.date_written,
