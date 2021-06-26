@@ -1,10 +1,51 @@
 const fs = require('fs');
 const path = require('path');
 const csv = require('fast-csv')
-const { Questions } = reuqire('./Questions.js')
+const {Answers} = require('./Answers.js')
+const {Photos} = require('./Photos.js')
+
 const filePath = path.join(__dirname, '../data/questions.csv')
 
-// const readStream = fs.createReadStream(filePath, {encoding: 'utf8'});
+var chunkArray = [];
+const readStream = fs.createReadStream(filePath, {encoding: 'utf8'});
+  .pipe(csv.parse({headers: true}))
+  .on('data', async (chunk) => {
+    let photos = new Photos({
+      answer_id: data.answer_id,
+      url: data.url;
+    })
+    if (chunkArray.length === 1000) {
+      readStream.pause();
+      (async () => {
+        await chunkArray.forEach(async photo => {
+          let findAnswer = await Answers.updateOne(
+            { answer_id: photo.answer_id },
+            {$push: {photos: photo}}
+          )
+        })
+      })()
+      let timeElasped = new Date() - startTime;
+      chunkArray = [];
+      readStream.resume();
+    } else {
+      chunkArray.push(photo);
+    }
+})
+  .on('end', async () => {
+    if (array.length) {
+      (async () => {
+        await chunkArray.forEach(async photo => {
+          let findAnswer = await Answers.updateOne(
+            { answer_id: photo.answer_id },
+            {$push: {photos: photo}}
+          )
+        })
+      })()
+      chunkArray = [];
+    }
+    console.log('imported')
+  })
+
 
 // var chunkArray = [];
 
@@ -22,37 +63,3 @@ const filePath = path.join(__dirname, '../data/questions.csv')
 //       console.log('done');
 //     })
 // })
-
-
-/*
-var bulk = Answer.collection.initializeOrderedBulkOp();
-var lineRemainder = '';
-var count = 0;
-readStream.on('data', (chunk) => {
-  let lines = chunk.split('\n');
-  lines[0] = lineRemainder + lines[0];
-  lineRemainder = lines.pop();
-  count++;
-  lines.forEach( async (line) => {
-    line = line.split(',');
-    try {
-      let answers = new model.Answer({
-        question_id: lines[1],
-        body: lines[2],
-        date_written: lines[3],
-        answerer_name: lines[4],
-        helpfulness: lines[7],
-        report: lines[6]
-      })
-      let newAnswer = await answers;
-      let saveAnswer = await newAnswer.save();
-    } catch (err) {
-      console.log(err)
-    }
-  })
-});
-
-readStream.on('end', () => {
-  console.log(count);
-})
-*/
