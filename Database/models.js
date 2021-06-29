@@ -1,27 +1,32 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema
+mongoose.connect('mongodb://localhost:27017/SDC', {useNewUrlParser: true, useUnifiedTopology: true });
 
-let questionSchema = new Schema({
+let finalSchema = new Schema({
   product_id: Number,
   question_id: Number,
   question_body: String,
   asker_name: String,
+  question_date: Date,
   question_helpfulness: Number,
-  report: Boolean,
+  reported: Boolean,
   answers: [{
+    answer_id: Number,
     body: String,
     question_id: Number,
     date_written: Date,
     answerer_name: String,
-    helpfulness: Number,
-    report: Boolean,
+    answerer_email: String,
+    helpful: Number,
+    reported: Boolean,
     photos: [{
       answer_id: Number,
       id: Number,
       url: String
     }]
   }]
-})
+}, { collection: 'finalFinalCollection' } )
 
-let models = mongoose.model('models', questionSchema, 'models');
-module.exports = models;
+let Model = mongoose.model('Model', finalSchema, 'finalFinalCollection');
+
+module.exports = Model;

@@ -1,10 +1,7 @@
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/SDC', {useNewUrlParser: true, useUnifiedTopology: true });
-const db = mongoose.connection;
-let Questions = require('./Questions.js');
-let Answers = require('./Answers.js');
-let Photos = require('./Photos.js');
-
+const Model = require('./models.js')
+const Answers = require('./Answers.js')
+mongoose.set('useFindAndModify', false);
 
 let getQuestions = async (req, res) => {
   let id = req.query.product_id;
@@ -17,64 +14,7 @@ let getQuestions = async (req, res) => {
     results: []
   }
 
-  const agg = [
-    {
-      $match: { product_id: 2}
-    }, {
-    $lookup: {
-      from: 'Answers',
-      localField: 'id',
-      foreignField: 'question_id',
-      as: 'answers'
-    }
-  },{
-    $unwind: {
-      path: '$answers',
-      preserveNullAndEmptyArrays: true
-    }
-  }, {
-    $lookup: {
-      from: 'Photos',
-      localField: 'answers.id',
-      foreignField: 'answer_id',
-      as: 'answers.photos'
-    }
-  }, {
-    $group: {
-      _id: '$id',
-      product_id: {
-        $first: '$product_id'
-      },
-      body: {
-        $first: '$body'
-      },
-      question_date: {
-        $first: '$date_written'
-      },
-      reported: {
-        $first: '$reported'
-      },
-      helpfulness: {
-        $first: '$helpful'
-      },
-      answers: {
-        $push: '$answers'
-      }
-    }
-  }]
-  let questions = db.collection('testoutput').find('product_id': 2)
-
-  questions.forEach(data => {
-    console.log(data)
-  })
-
-  // await questions.toArray((err, result) => {
-  //   if (err) {
-  //     return err;
-  //   }
-
-  //   return result;
-  // })
+  let questions = await Model.find({product_id: id}, {_id: 0})
 
   if (!questions.length) {
     return response;
@@ -86,11 +26,9 @@ let getQuestions = async (req, res) => {
 }
 
 let getAnswers = async (req, res) => {
-  //find, createIndex question_id
-  //aggregate, lookup the file and send the result back
- let id = req.body.question_id;
- let page = req.body.page || 0;
- let count = req.body.count || 5;
+ let id = req.params.question_id;
+ let page = req.params.page || 0;
+ let count = req.params.count || 5;
  let response = {
    question: id,
    page: page,
@@ -98,16 +36,7 @@ let getAnswers = async (req, res) => {
    results: []
  }
 
- let answers = await db.collection('Answers').aggregate([{
-   '$match': {question_id: id}
- }, {
-    '$lookup': {
-      from: "Photos",
-      localField: "id",
-      foreignField: "answer_id",
-      as: "photos"
-    }
-  }])
+ let answers =  await Model.find({question_id: id}, {_id: 0})
 
 if (!answers.length) {
   return response;
@@ -117,41 +46,130 @@ if (!answers.length) {
 }
 }
 
-
-let saveQuestion = () => {
-  var newQuestion = new Questions({
+/*
+{
     product_id: req.body.product_id,
     question_id: req.body.question_id,
     question_body: req.body.question_body,
     asker_name: req.body.asker_name,
     question_helpfulness: req.body.question_helpfulness,
-    report: false,
-    answers: []
-  })
-  newQuestion.save(function(err, res) {
-    if (err) {
-      return console.log('error', err);
-    }
-    console.log('question saved');
-  });
-}
+    report: false
+  }
 
-let saveAnswer = () => {
-  var newAnswer = new Answers({
+
+  {
     question_id: req.body.question_id,
     body: req.body.body,
     date_written: req.body.date_written,
     answerer_name: req.body.answerer_name,
     helpfulness: req.body.helpfulness,
     report: req.body.report,
-    photos: []
+    photos: req.body.photos
+  }
+*/
+let saveQuestion = (req, res) => {
+  // var id = req.params.product_id;
+  var updateQuetionId = Model.update(
+    { product_id: req.params.product_id},
+    {$inc: {question_id: 1}}
+  )
+  var newQuestion = new Model({
+    product_id: req.params.product_id,
+    question_id: updateQuetionId,
+    question_date: new Date().toISOString(),
+    question_body: req.body.question_body,
+    asker_name: req.body.asker_name,
+    question_helpfulness: req.body.question_helpfulness,
+    report: false
   })
-  newAnswer.save(function(err, res) {
+  console.log('newQuestion', newQuestion)
+  // console.log(req.body)
+  // Model.update(
+  //   {'product_id': Number(id)},
+  //   { $push: { results: req.body}},
+  //   function(err,result) {
+  //     if (err) {
+  //       res.status(500).send(err);
+  //      } else {
+  //        res.status(201).json(result);
+  //      }
+  //   }
+  // );
+  newQuestion.save(function(err, result) {
     if (err) {
-      return console.log('error', err);
-    }
-    console.log('question saved');
+      res.status(500).send(err);
+     } else {
+       res.status(201).json(result);
+     }
   });
+}
+
+let saveAnswer = (req, res) => {
+  var id = req.params.question_id;
+  Model.updateOne(
+    {'question_id': Number(id)},
+    { $push: { answers: req.body, $inc: {'answers.answer_id': 1}} },
+    function(err,result) {
+      if (err) {
+        res.status(500).send(err);
+       } else {
+         res.status(201).json(result);
+       }
+    }
+  );
+
+};
+
+let updateHelpfulness = (req, res) => {
+  var query = {'question_id': req.params.question_id};
+  var updateByOne = {'$inc' : {question_helpfulness: 1}};
+  Model.findOneAndUpdate(query, updateByOne, {new: true} , (err, result) => {
+    if (err) {
+      res.status(500).send(err)
+    } else {
+     res.status(200).send(result);
+    }
+  })
+}
+
+let updateAnswerHelpful = (req, res) => {
+  var questionId = req.params.question_id;
+  var paramId = req.params.answer_id;
+  var query = {'answers.answer_id': Number(paramId)};
+  var updateHelpful = {$inc : {'answers.$.helpful': 1}}
+  Model.updateOne(query, updateHelpful, {new: true} , (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      console.log(result);
+     res.status(200).send(result);
+    }
+  })
+
+}
+
+let updateAnswerReport = (req, res) => {
+  var paramId = req.params.answer_id;
+  var query = {'answers.answer_id': Number(paramId)};
+  var updateHelpful = {'reported': true}
+  Model.updateOne(query, updateHelpful, {new: true} , (err, result) => {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      console.log(result);
+     res.status(200).send(result);
+    }
+  })
+}
+
+module.exports = {
+  getQuestions,
+  getAnswers,
+  saveQuestion,
+  saveAnswer,
+  updateHelpfulness,
+  updateAnswerHelpful,
+  updateAnswerReport
 }
 
 //----------------------------------------------------------------------------------
@@ -269,55 +287,82 @@ let questions = await db.collection('Questions').aggregate([
   },
   */
 
-db.Questions.aggregate([
- {
-  $lookup: {
-    from: 'Answers',
-    localField: 'id',
-    foreignField: 'question_id',
-    as: 'answers'
-  }
-},{
-  $unwind: {
-    path: '$answers',
-    preserveNullAndEmptyArrays: true
-  }
-}, {
-  $lookup: {
-    from: 'Photos',
-    localField: 'answers.id',
-    foreignField: 'answer_id',
-    as: 'answers.photos'
-  }
-}, {
+/* {
   $group: {
     _id: '$id',
-    product_id: {
-      $first: '$product_id'
+    answer_id: {
+      $first: '$id'
+    },
+    question_id: {
+      $first: '$id'
     },
     body: {
       $first: '$body'
     },
-    question_date: {
+    date_written: {
       $first: '$date_written'
+    },
+    answerer_name: {
+      $first: '$answerer_name'
     },
     reported: {
       $first: '$reported'
     },
-    helpfulness: {
+    helpful: {
       $first: '$helpful'
-    },
-    answers: {
-      $push: '$answers'
     }
   }
-},
-{$out: 'finaloutput'}
-], {allowDiskUse: true})
+}*/
 
-module.exports = {
-  getQuestions,
-  getAnswers,
-  saveQuestion,
-  saveAnswer
-}
+// db.Questions.aggregate([
+//  {
+//   $lookup: {
+//     from: 'Answers',
+//     localField: 'id',
+//     foreignField: 'question_id',
+//     as: 'answers'
+//   }
+// }, {
+//   $unwind: {
+//     path: '$answers',
+//     preserveNullAndEmptyArrays: true
+//   }
+// }, {
+//   $lookup: {
+//     from: 'Photos',
+//     localField: 'answers.answer_id',
+//     foreignField: 'answer_id',
+//     as: 'answers.photos'
+//   }
+// }, {
+//   $group: {
+//     _id: '$id',
+//     question_id: {
+//       $first: '$id'
+//     },
+//     product_id: {
+//       $first: '$product_id'
+//     },
+//     question_body: {
+//       $first: '$body'
+//     },
+//     question_date: {
+//       $first: '$date_written'
+//     },
+//     asker_name: {
+//       $first: '$asker_name'
+//     },
+//     reported: {
+//       $first: '$reported'
+//     },
+//     question_helpfulness: {
+//       $first: '$helpful'
+//     },
+//     answers: {
+//       $push: '$answers'
+//     }
+//   }
+// },
+// {$out: 'finalFinalCollection'}
+// ], {allowDiskUse: true})
+
