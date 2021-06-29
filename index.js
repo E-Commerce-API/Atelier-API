@@ -1,6 +1,4 @@
 require('newrelic');
-const path = require('path');
-require('dotenv').config({path: './env'});
 var bodyParser = require('body-parser')
 const express = require('express');
 const {getQuestions, getAnswers, saveQuestion, saveAnswer, updateHelpfulness, updateAnswerHelpful, updateAnswerReport} = require('./database/controllers.js')

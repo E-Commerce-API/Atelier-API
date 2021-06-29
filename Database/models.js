@@ -25,7 +25,7 @@ let finalSchema = new Schema({
       url: String
     }]
   }]
-}, { collection: 'finalFinalCollection' } )
+}, { collection: 'finalFinalCollection' })
 
 let Model = mongoose.model('Model', finalSchema, 'finalFinalCollection');
 
