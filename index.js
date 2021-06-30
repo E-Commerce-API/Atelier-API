@@ -1,22 +1,25 @@
 require('newrelic');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+// var compression = require('compression');
 const express = require('express');
-const {getQuestions, getAnswers, saveQuestion, saveAnswer, updateHelpfulness, updateAnswerHelpful, updateAnswerReport} = require('./database/controllers.js')
+const {getQuestions, getAnswers, saveQuestion, saveAnswer, updateHelpfulness, updateAnswerHelpful, updateAnswerReport} = require('./database/controllers.js');
 let app = express();
+// app.use(compression())
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json())
 
-// app.get('/qa/questions', (req, res) => {
-//   getQuestions(req, res)
-//   .then(result => {
-//     return res.send(result);
-//   })
-//   .catch(err => {
-//     return res.send(err);
-//   })
-// });
-app.get('/qa/questions', getQuestions);
+app.get('/qa/questions', (req, res) => {
+  getQuestions(req, res)
+  .then(result => {
+    return res.send(result);
+  })
+  .catch(err => {
+    return res.send(err);
+  })
+});
+// app.get('./qa/questions', getQuestions)
+
 app.get('/qa/questions/:question_id/answers', (req, res) => {
   getAnswers(req, res)
   .then(result => {

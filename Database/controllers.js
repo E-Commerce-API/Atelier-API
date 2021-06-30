@@ -24,6 +24,33 @@ let getQuestions = async (req, res) => {
 
 }
 
+// let getQuestions = async (req, res) => {
+//   let id = req.query.product_id;
+//   let page = req.query.page || 0;
+//   let count = req.query.count || 5;
+//   let response = {
+//     product_id: id,
+//     page: page,
+//     count: count,
+//     results: []
+//   }
+
+//   var streamData = await Model.find({product_id: id}, {_id: 0}).stream();
+//   streamData.on('data', function(doc) {
+//     console.log(doc);
+//   })
+//   streamData.on('end', function() {
+//     console.log('done')
+//   })
+//   // if (!questions.length) {
+//   //   return response;
+//   // } else {
+//   //   response.results.push(...questions)
+//   //   return response;
+//   // }
+
+// }
+
 let getAnswers = async (req, res) => {
  let id = req.params.question_id;
  let page = req.params.page || 0;
