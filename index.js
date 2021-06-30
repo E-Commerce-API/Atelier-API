@@ -7,16 +7,16 @@ let app = express();
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json())
 
-app.get('/qa/questions', (req, res) => {
-  getQuestions(req, res)
-  .then(result => {
-    return res.send(result);
-  })
-  .catch(err => {
-    return res.send(err);
-  })
-});
-
+// app.get('/qa/questions', (req, res) => {
+//   getQuestions(req, res)
+//   .then(result => {
+//     return res.send(result);
+//   })
+//   .catch(err => {
+//     return res.send(err);
+//   })
+// });
+app.get('/qa/questions', getQuestions);
 app.get('/qa/questions/:question_id/answers', (req, res) => {
   getAnswers(req, res)
   .then(result => {
@@ -30,16 +30,6 @@ app.get('/qa/questions/:question_id/answers', (req, res) => {
 app.post('/qa/questions', saveQuestion);
 
 app.post('/qa/questions/:question_id/answers', saveAnswer)
-
-// app.post('/qa/questions/:question_id/answers', (req, res) => {
-//   saveQuestion(req.body)
-//   .then(() => {
-//     res.status(201).send('Success')
-//   })
-//   .catch((err) => {
-//     res.status(404).send(err)
-//   })
-// });
 
 app.put('/qa/questions/:question_id/helpful', updateHelpfulness);
 
